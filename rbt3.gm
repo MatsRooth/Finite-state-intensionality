@@ -1,0 +1,76 @@
+; Type-shifters without quotes (e.g., L,U,D,S) are posited automatically.
+; Type-shifters in quotes (e.g., "B", "_") need to be explicitly inserted. 
+; Removing quotes works, but slows down the parser.
+
+; Uncomment Z to get right-to-left parsing (see section 7).
+
+(set! grammar
+  `(
+     ((L ((2 / (1 \ 2)) / 1)) (^ x (^ f (f x))))       
+     ((U ((2 // (1 \\ 2)) / 1)) (^ x (^ f (f x))))
+     ((D (1 / (1 // (t \\ t)))) (^ k (k (^ x x))))
+     ((S (((4 // (2 \\ 5)) / (3 // (1 \\ 5))) / (4 // ((2 / 1) \\ 3))))
+      (^ L (^ R (^ c (L (^ l (R (^ r (c (l r))))))))))
+ ;   ((Z (((5 // (2 \\ 3)) / (5 // (1 \\ 4))) / (4 // ((2 / 1) \\ 3))))
+ ;    (^ L (^ R (^ c (R (^ r (L (^ l (c (l r))))))))))
+
+;;   ((B ((1 // (e \\ (e > 2))) / (1 // (e \\ 2))))
+   (("B" ((t // (e \\ (e > t))) / (t // (e \\ t))))
+     (^ c (^ d (c (^ x ((d x) x))))))
+
+    (("_" ((e \\ 1) // (e \\ 1))) (^ k k))
+    (("_r" ((((e > t) // (e \\ t)) \\ t) // (((e > t) // (e \\ t)) \\ t)))
+     (^ k k))
+;    (("_r" (((2 // (e \\ 1)) \\ 3) // ((2 // (e \\ 1)) \\ 3))) (^ k k))
+    ((Q (((e ? 1) / 2) / ((e ? 1) // 2))) (^ k k))
+
+    (("to" (e / e)) (^ x x)) 
+    (("someone" (t // (e \\ t))) (^ k (exists x (k x)))) 
+
+    (("in" ((e \ t) / e)) (^ y (^ x (In x y))))
+    (("one" e) "1")
+    (("two" e) "2")
+    (("three" e) "3")
+    (("four" (e \N t)) "4") 
+    (("bee" (e \N t)) (Let b))
+    (("tee" (e \N t)) (Let t))
+    (("ay" (e \N t)) (Let a))
+    (("ee" (e \N t)) (Let a))
+    (("robot" e) "r")
+    (("know" ((e \ t) / t)) (^ y (^ x (Kt x y))))
+    (("he" ((e > 1) // (e \\ 1))) (^ k k))
+    (("him" ((e > 1) // (e \\ 1))) (^ k k))
+    (("his" ((e > 1) // (e \\ 1))) (^ k k))
+    (("self" ((e > 1) // (e \\ 1))) (^ k k))
+
+    (("who" ((e ? 1) // (e \\ 1))) (^ k k))
+    (("what" ((e ? 1) // (e \\ 1))) (^ k k))
+    (("whose" ((e ? 1) // (e \\ 1))) (^ k k))
+
+    (("which-students" ((e \\ (e ? 1)) // (e \\ (e \\ 1))))
+     (^ c (^ trace (which-students (^ x ((c x) trace))))))
+    (("follow" ((e \ t) / e)) Fol)
+
+    (("vowel" (e \N t)) (^ x (vowel (C x))))
+    ; object 
+    (("a" ((((e \ t) / e) \ (e \ t)) / (e \N t))) (^ P (^ f (Indef P f))))
+    ; subject 
+    (("a" ((t / (e \ t)) / (e \N t))) (^ P (^ f (Indef P f))))
+    (("is" ((e \ t) / (e \X t))) (^ x x))
+    ; object trace
+    (("e" ((e \T t) // ((((e \ t) / e) \ (e \ t)) \\ t))) (^ k (Bind (k Trace))))
+    ; relative pronoun
+    (("that" (((e \N t) \ (e \N t)) / (e \T t))) (^ P (^ Q (Intersect P Q))))
+))    
+
+
+(set! filter-cats '(t (e \T t) (e \N t)))
+(set! display-derivation? #t)
+
+
+;(parse '(a  follow a ay))
+;(parse '(a ay follow mary))
+;(parse '(a ay follow everyone))
+;(parse '(a bee follow e))
+;(parse '(ay that a bee follow e))
+(parse '(a ay that a bee follow e follow a tee))
